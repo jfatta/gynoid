@@ -20,6 +20,7 @@
   "dependencies": {
     "async": "^2.0.0-rc.4",
     "bluebird": "^3.3.5",
+    "deep-clear-require": "verlic/deep-clear-require#v0.0.3",
     "nodegit": "^0.16.0",
     "rimraf": "^2.5.2",
     "semver": "^5.1.0",
