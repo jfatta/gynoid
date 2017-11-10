@@ -3,7 +3,7 @@
 This is our Slack bots platform customized to satisfy our developers:
 
 - **Bots made easy:** just create a JS file, add metadata, done!
-- **Install from GitHb:** install bots in Slack from GitHub
+- **Install from GitHub:** install bots in Slack from GitHub
 - **Extend existing bots from different sources**: One bot, multiple functions, different repositories.
 
 We call these extensions _Droids_. To install new extensions, we have a Gynoid that serves as a wrapper for this library. Our [Gynoid Droid](https://github.com/auth0/gynoid-droid) is reponsible of registering and extending our bots directly from Slack.
