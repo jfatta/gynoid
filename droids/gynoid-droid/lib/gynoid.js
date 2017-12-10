@@ -133,6 +133,7 @@ module.exports = class GynoidDroid {
       var droid = require('../droid.json');
       droid.actions = droid.actions.map((action) => {
         action.acls = action.acls || {};
+        action.acls.dm = false;
         action.acls.channels = req.params.channel;
         return action;
       });

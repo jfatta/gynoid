@@ -13,7 +13,7 @@
       "help": "`register {bot} using {token}`: registers and initializes a bot using a Token",
       "premessage": "_Initializing gynoid..._",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -24,7 +24,7 @@
       "help": "`unregister {bot}`: disconnects and removes the bot from the registry",
       "premessage": "Unregistering Droid...",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -35,7 +35,7 @@
       "help": "`reload {bot}`: reloads all extensions from the bot",
       "premessage": "Reloading Gynoid...",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -47,7 +47,7 @@
       "help": "`extend {bot} from {repo}`: installs an extension from a GitHub repository",
       "premessage": "Extending Droid...",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -59,7 +59,7 @@
       "help": "`remove extension {name} from {bot}`: removes the installed extensions from the bot",
       "premessage": "Removing extension...",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -71,7 +71,7 @@
       "help": "`list extensions {bot}`: shows the installed extensions for the specified bot",
       "premessage": "Listing extensions...",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -89,7 +89,7 @@
       "help": "`list droids`: gets the list of installed gynoids",
       "premessage": "Listing gynoids...",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -107,7 +107,7 @@
       ],
       "help": "`add key {key} {value} to {bot}`: adds a key-value setting for the specified bot",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -118,7 +118,7 @@
       ],
       "help": "`remove key {key} from {bot}`: removes a setting from the specified bot",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -129,7 +129,7 @@
       ],
       "help": "`list keys for {bot}`: lists the key names associated with a bot",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -138,7 +138,7 @@
         "list all keys"
       ],
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     },
     {
@@ -149,7 +149,7 @@
       "premessage": "_Securing Gynoid..._",
       "help": "`secure {channel}`: updates all functions ACL to only accept commands in the selected channel",
       "acls": {
-        "mention": true
+        "explicitMention": true
       }
     }
   ]
