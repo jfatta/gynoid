@@ -130,17 +130,17 @@ module.exports = class GynoidDroid {
   }
   secure(req, res) {
     try {
-      var droid = require('./droid.json');
+      var droid = require('../droid.json');
       droid.actions = droid.actions.map((action) => {
         action.acls = action.acls || {};
         action.acls.channels = req.params.channel;
         return action;
       });
 
-      fs.writeFileSync(__dirname + '/droid.json', JSON.stringify(droid, null, 2));
+      fs.writeFileSync(__dirname + '/../droid.json', JSON.stringify(droid, null, 2));
       req.params.name = 'me';
       res.text('Secured gynoid in channel ' + req.params.channel)
-      return this.reloadDroid(req, res);
+      return this.reloadGynoid(req, res);
     } catch (err) {
       return res.text('Unable to secure gynoid.\n```' + err + '```')
     }
