@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@slack/client": "^3.14.2",
+    "chalk": "^2.3.0",
     "clear-module": "^2.1.0",
     "deep-clear-require": "verlic/deep-clear-require#v0.0.3",
     "eventemitter3": "^2.0.3",
