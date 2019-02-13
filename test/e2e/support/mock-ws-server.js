@@ -10,7 +10,7 @@ class MockWSServer extends ws.Server {
   }
 
   sendMessage(message) {
-    this.clientConnection.send(JSON.stringify(message));
+    this.clientConnection.send(message);
   }
 
   closeConnection() {

@@ -95,4 +95,19 @@ describe('gynoid', () => {
             })
         });
     });
+
+    describe('droids', () => {
+        it('should match plain message to a correct method from the droids implementation', (done) => {
+            mockSlack.expectMessageFromDroid('Ping Droid...');
+            const scope = mockSlack.expectMessageFromDroid('`Hey Pong!`');
+
+            mockSlack.sendMessageToGynoid('ping');
+
+            setTimeout(() => {
+                console.log(scope.isDone());
+                console.log(scope.pendingMocks());
+                done();
+            }, 3000);
+        });
+    })
 });

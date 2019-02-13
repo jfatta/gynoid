@@ -16,10 +16,22 @@ class MockSlack {
     }
 
     sendMessageToGynoid(text) {
-        const message = messageBuilder.withMessageForGynoid(text);
-        this.ws.send(JSON.stringify(message));
+        const message = messageBuilder.withMessageForGynoid(text).build();
+        this.ws.sendMessage(JSON.stringify(message));
     }
-    
+
+    expectMessageFromDroid(message) {
+        return this.webApi
+            .post('/chat.postMessage', { 
+                as_user: 'true',
+                channel: 'GG30G30MU',
+                text: message,
+                token: 'mock-slack-token' 
+            })
+            .times(1)
+            .reply(200, { ok: true})
+    }
+
     closeConnection() {
         this.ws.closeConnection();
     }
