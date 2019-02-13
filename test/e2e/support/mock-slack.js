@@ -32,6 +32,14 @@ class MockSlack {
             .reply(200, { ok: true})
     }
 
+    allWebCallsWerePerformed() {
+        return Promise.resolve(this.webApi.isDone());
+    }
+
+    getPendingCalls() {
+        return this.webApi.pendingMocks();
+    }
+
     closeConnection() {
         this.ws.closeConnection();
     }

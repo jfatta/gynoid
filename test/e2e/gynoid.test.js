@@ -5,6 +5,8 @@ const path = require('path');
 const createNewGynoidConfig = require('./support/create-new-config-file');
 const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
+const waitForCondition = require('./support/wait-for-condition');
+
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
@@ -45,12 +47,9 @@ const readConfig = (configPath) => {
 describe('gynoid', () => {
     let mockSlack;
     before((done) => {
+        mockSlack = new MockSlack({wsPort: 5521});
         createNewGynoidConfig(TEST_GYNOID_CONFIG_PATH)
             .then(() => {
-                return new MockSlack({wsPort: 5521});
-            })
-            .then((slack) => {
-                mockSlack = slack
                 const startGynoid = require('../../index');
                 return startGynoid();
             })
@@ -99,15 +98,16 @@ describe('gynoid', () => {
     describe('droids', () => {
         it('should match plain message to a correct method from the droids implementation', (done) => {
             mockSlack.expectMessageFromDroid('Ping Droid...');
-            const scope = mockSlack.expectMessageFromDroid('`Hey Pong!`');
+            mockSlack.expectMessageFromDroid('`Hey Pong!`');
 
             mockSlack.sendMessageToGynoid('ping');
 
-            setTimeout(() => {
-                console.log(scope.isDone());
-                console.log(scope.pendingMocks());
-                done();
-            }, 3000);
+            waitForCondition(() => mockSlack.allWebCallsWerePerformed(), 2000, 'gynoid responded with two messages')
+                .then(done)
+                .catch(err => {
+                    const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
+                    done(new Error(errorMessage));
+                });
         });
     })
 });
