@@ -1,4 +1,4 @@
-const createApiSlackMock = require('./support/api-slack-mock');
+const MockSlack = require('./support/mock-slack');
 const fs = require('fs');
 const rimraf = require('rimraf');
 const path = require('path');
@@ -43,12 +43,14 @@ const readConfig = (configPath) => {
 }
 
 describe('gynoid', () => {
+    let mockSlack;
     before((done) => {
         createNewGynoidConfig(TEST_GYNOID_CONFIG_PATH)
             .then(() => {
-                return createApiSlackMock();
+                return new MockSlack({wsPort: 5521});
             })
-            .then(() => {
+            .then((slack) => {
+                mockSlack = slack
                 const startGynoid = require('../../index');
                 return startGynoid();
             })
@@ -58,6 +60,7 @@ describe('gynoid', () => {
     after((done) => {
         removeConfigFile(TEST_GYNOID_CONFIG_PATH)
             .then(() => removeDroids(TEST_DROIDS_FOLDER_PATH))
+            .then(() => mockSlack.closeConnection())
             .then(() => done());
     })
 
