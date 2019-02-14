@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "GYNOID_INSTALL_PATH=./test/e2e/fixtures/droids GYNOID_CONFIG_PATH=./test/e2e/fixtures/gynoid.config.json mocha ./test/**/*.test.js --timeout 500000"
+    "test": "GYNOID_INSTALL_PATH=./test/e2e/fixtures/droids GYNOID_CONFIG_PATH=./test/e2e/fixtures/gynoid.config.json mocha ./test/**/*.test.js --timeout 50000"
   },
   "keywords": [
     "chatops",

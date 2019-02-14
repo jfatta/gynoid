@@ -44,6 +44,15 @@ const readConfig = (configPath) => {
     })
 }
 
+const expectPathToExist = (pathToCheck, done) => {
+    fs.access(path.normalize(pathToCheck), (err) => {
+        if (err) {
+            done(err);
+        } else {
+            done()
+        }
+    })
+}
 describe('gynoid', () => {
     let mockSlack;
     before((done) => {
@@ -53,7 +62,9 @@ describe('gynoid', () => {
                 const startGynoid = require('../../index');
                 return startGynoid();
             })
-            .then(() => done());
+            .then(() => mockSlack.registerDroid('test'))
+            .then(() => mockSlack.extendDroid('test', 'auth0/test-droid'))
+            .then(done);
     })
 
     after((done) => {
@@ -85,29 +96,56 @@ describe('gynoid', () => {
 
         it('should clone gynoid-droid code', (done) => {
             const gynoidDroidPath = path.join(TEST_DROIDS_FOLDER_PATH, 'gynoid-droid');
-            fs.access(path.normalize(gynoidDroidPath), (err) => {
-                if (err) {
-                    done(err);
-                } else {
-                    done()
-                }
-            })
+            
+            expectPathToExist(gynoidDroidPath, done);
+        });
+
+        it('should install droids dependencies', (done) => {
+            const gynoidDroidDependenciesPath = path.join(TEST_DROIDS_FOLDER_PATH, 'gynoid-droid/node_modules');
+
+            expectPathToExist(gynoidDroidDependenciesPath, done);
         });
     });
 
     describe('droids', () => {
-        it('should match plain message to a correct method from the droids implementation', (done) => {
-            mockSlack.expectMessageFromDroid('Ping Droid...');
-            mockSlack.expectMessageFromDroid('`Hey Pong!`');
+        describe('message parsing', () => {
+            it('should match plain message to a correct method from the droids implementation', (done) => {
+                mockSlack.expectMessageFromDroid('Pong!');
+    
+                mockSlack.sendMessageToDroid('test', 'ping');
+    
+                waitForCondition(() => mockSlack.allWebCallsWerePerformed(), 2000, 'test droid responded with pong message')
+                    .then(done)
+                    .catch(err => {
+                        const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
+                        done(new Error(errorMessage));
+                    });
+            });
+            it('should match messages with multiple parameters to a correct method from the droids implementation', (done) => {
+                mockSlack.expectMessageFromDroid('Sending echo message1 message2')
+                
+                mockSlack.sendMessageToDroid('test', 'echo message1 message2')
 
-            mockSlack.sendMessageToGynoid('ping');
+                waitForCondition(() => mockSlack.allWebCallsWerePerformed(), 2000, 'test droid responded with echo message')
+                    .then(done)
+                    .catch(err => {
+                        const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
+                        done(new Error(errorMessage));
+                    });
+            });
 
-            waitForCondition(() => mockSlack.allWebCallsWerePerformed(), 2000, 'gynoid responded with two messages')
-                .then(done)
-                .catch(err => {
-                    const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
-                    done(new Error(errorMessage));
-                });
+            it('should match messages for all aliases defined in droids configuration', (done) => {
+                mockSlack.expectMessageFromDroid('Sending echo message1 message2')
+                
+                mockSlack.sendMessageToDroid('test', 'another-echo message1 message2')
+
+                waitForCondition(() => mockSlack.allWebCallsWerePerformed(), 2000, 'test droid responded with echo message')
+                    .then(done)
+                    .catch(err => {
+                        const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
+                        done(new Error(errorMessage));
+                    });
+            });
         });
     })
 });

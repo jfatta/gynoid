@@ -1,11 +1,21 @@
 class MessageBuilder {
-    constructor(template) {
-        this.template = template;       
+    constructor(template, botId) {
+        this.template = template; 
+        this.botId = botId;      
     }
 
-    withMessageForGynoid(message) {
-        const newTemplate = Object.assign(this.template, {text: `<@UG0QY8YNL> ${message}`});
-        return new MessageBuilder(newTemplate);
+    withMessage(message) {
+        const newTemplate = Object.assign(this.template, {text: `<@${this.botId}> ${message}`});
+        return new MessageBuilder(newTemplate, this.botId);
+    }
+
+    withBotId(botId) {
+        return new MessageBuilder(Object.assign({}, this.template), botId);
+    }
+
+    withChannel(channel) {
+        const newTemplate = Object.assign(this.template, {channel});
+        return new MessageBuilder(newTemplate, this.botId);
     }
 
     build() {
@@ -24,4 +34,4 @@ const template = {
     'ts': 1550018349.001200
 };
 
-module.exports = new MessageBuilder(template);
+module.exports = new MessageBuilder(template, 'IDgynoidbot');
