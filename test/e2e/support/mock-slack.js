@@ -13,7 +13,6 @@ class MockSlack {
         rtmFixture.self.name = 'gynoidbot';
         rtmFixture.url = 'ws://localhost:' + this.wsPort;
         this.webApi = nock('https://slack.com/api')
-            .log(console.log)
             .post('/rtm.start')
             .times(1)
             .reply(200, rtmFixture);
@@ -30,7 +29,8 @@ class MockSlack {
         const message = messageBuilder.withBotId(`ID${droidName}`).withMessage(text).build();
         this.sockets[droidName].sendMessage(JSON.stringify(message));
     }
-    expectMessageFromDroid(message) {
+
+    givenPostMessageFromDroidIsConfigured(message) {
         this.webApi
             .post('/chat.postMessage', { 
                 as_user: 'true',
@@ -43,17 +43,19 @@ class MockSlack {
     }
 
     registerDroid(droidName) {
+        const port = this.wsPort + 1
+
         const rtmFixture = _.cloneDeep(RTM_JSON);
         rtmFixture.self.id = `ID${droidName}`;
         rtmFixture.self.name = droidName;
-        const port = this.wsPort + 1
         rtmFixture.url = `ws://localhost:${port}`;
+
         this.sockets[droidName] = new MockWSServer({port})
         this.webApi.post('/rtm.start')
             .times(1)
             .reply(200, rtmFixture);
-        this.expectMessageFromDroid('Registering Droid...');
-        this.expectMessageFromDroid(`Droid ${droidName} successfully registered`);
+        this.givenPostMessageFromDroidIsConfigured('Registering Droid...');
+        this.givenPostMessageFromDroidIsConfigured(`Droid ${droidName} successfully registered`);
 
         this.sendMessageToGynoid(`register ${droidName} using xoxb-mock-token`);
 
@@ -61,9 +63,9 @@ class MockSlack {
     }
 
     extendDroid(droidName, extensionName) {
-        this.expectMessageFromDroid('Extending Droid...');
-        this.expectMessageFromDroid(`Droid ${droidName} successfully extended`);
-        this.expectMessageFromDroid(`Droid ${droidName} successfully reloaded`);
+        this.givenPostMessageFromDroidIsConfigured('Extending Droid...');
+        this.givenPostMessageFromDroidIsConfigured(`Droid ${droidName} successfully extended`);
+        this.givenPostMessageFromDroidIsConfigured(`Droid ${droidName} successfully reloaded`);
 
         this.sendMessageToGynoid(`extend ${droidName} from ${extensionName}`);
 

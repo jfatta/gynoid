@@ -53,6 +53,15 @@ const expectPathToExist = (pathToCheck, done) => {
         }
     })
 }
+
+const expectAllWebCallsWerePerformed = (mockSlack, done, timeout, message) => {
+    waitForCondition(() => mockSlack.allWebCallsWerePerformed(), timeout, message)
+        .then(done)
+        .catch(err => {
+            const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
+            done(new Error(errorMessage));
+        });
+}
 describe('gynoid', () => {
     let mockSlack;
     before((done) => {
@@ -110,41 +119,26 @@ describe('gynoid', () => {
     describe('droids', () => {
         describe('message parsing', () => {
             it('should match plain message to a correct method from the droids implementation', (done) => {
-                mockSlack.expectMessageFromDroid('Pong!');
+                mockSlack.givenPostMessageFromDroidIsConfigured('Pong!');
     
                 mockSlack.sendMessageToDroid('test', 'ping');
     
-                waitForCondition(() => mockSlack.allWebCallsWerePerformed(), 2000, 'test droid responded with pong message')
-                    .then(done)
-                    .catch(err => {
-                        const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
-                        done(new Error(errorMessage));
-                    });
+                expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
             });
             it('should match messages with multiple parameters to a correct method from the droids implementation', (done) => {
-                mockSlack.expectMessageFromDroid('Sending echo message1 message2')
+                mockSlack.givenPostMessageFromDroidIsConfigured('Sending echo message1 message2')
                 
                 mockSlack.sendMessageToDroid('test', 'echo message1 message2')
 
-                waitForCondition(() => mockSlack.allWebCallsWerePerformed(), 2000, 'test droid responded with echo message')
-                    .then(done)
-                    .catch(err => {
-                        const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
-                        done(new Error(errorMessage));
-                    });
-            });
+                expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with echo message');
+           });
 
             it('should match messages for all aliases defined in droids configuration', (done) => {
-                mockSlack.expectMessageFromDroid('Sending echo message1 message2')
+                mockSlack.givenPostMessageFromDroidIsConfigured('Sending echo message1 message2')
                 
                 mockSlack.sendMessageToDroid('test', 'another-echo message1 message2')
 
-                waitForCondition(() => mockSlack.allWebCallsWerePerformed(), 2000, 'test droid responded with echo message')
-                    .then(done)
-                    .catch(err => {
-                        const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
-                        done(new Error(errorMessage));
-                    });
+                expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with echo message');
             });
         });
     })
