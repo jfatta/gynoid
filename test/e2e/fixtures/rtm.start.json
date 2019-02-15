@@ -454,6 +454,23 @@
   ],
   "groups": [
     {
+      "id": "GG30G30MD",
+      "name": "random",
+      "is_group": true,
+      "created": 1549598669,
+      "creator": "UFV8PDTFG",
+      "is_archived": false,
+      "name_normalized": "random",
+      "is_mpim": false,
+      "has_pins": false,
+      "is_open": true,
+      "last_read": "1549598683.000400",
+      "members": ["UFV8PDTFG", "UG0QY8YNL", "UG46334CF"],
+      "topic": { "value": "", "creator": "", "last_set": 0 },
+      "purpose": { "value": "", "creator": "", "last_set": 0 },
+      "priority": 0
+    },
+    {
       "id": "GG30G30MU",
       "name": "security",
       "is_group": true,

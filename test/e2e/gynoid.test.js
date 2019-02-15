@@ -1,4 +1,4 @@
-const MockSlack = require('./support/mock-slack');
+const MockSlack = require('./support/mocks/mock-slack');
 const fs = require('fs');
 const rimraf = require('rimraf');
 const path = require('path');
@@ -6,6 +6,9 @@ const createNewGynoidConfig = require('./support/create-new-config-file');
 const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
 const waitForCondition = require('./support/wait-for-condition');
+const messageBuilder = require('./support/builders/message-builder');
+const postMessageResponseBuilder = require('./support/builders/post-message-response-builder');
+const constants = require('./support/mocks/mock-slack-constants');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
@@ -62,6 +65,13 @@ const expectAllWebCallsWerePerformed = (mockSlack, done, timeout, message) => {
             done(new Error(errorMessage));
         });
 }
+const expectNoWebCallsWerePerformed = (mockSlack, done, timeout, message) => {
+    waitForCondition(() => mockSlack.allWebCallsWerePerformed(), timeout, message)
+        .then(() => done(new Error(`Expected no api calls. ${message}`)))
+        .catch(err => {
+            done();
+        });
+}
 describe('gynoid', () => {
     let mockSlack;
     before((done) => {
@@ -73,7 +83,9 @@ describe('gynoid', () => {
             })
             .then(() => mockSlack.registerDroid('test'))
             .then(() => mockSlack.extendDroid('test', 'auth0/test-droid'))
-            .then(done);
+            .then(() => {
+                done()
+            });
     })
 
     after((done) => {
@@ -83,6 +95,9 @@ describe('gynoid', () => {
             .then(() => done());
     })
 
+    afterEach(() => {
+        mockSlack.clearAllWebApiCalls();
+    })
     describe('start up', () => {
         it('should register gynoid droid', (done) => {
             readConfig(TEST_GYNOID_CONFIG_PATH)
@@ -119,26 +134,91 @@ describe('gynoid', () => {
     describe('droids', () => {
         describe('message parsing', () => {
             it('should match plain message to a correct method from the droids implementation', (done) => {
-                mockSlack.givenPostMessageFromDroidIsConfigured('Pong!');
+                mockSlack.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Pong!'));
     
-                mockSlack.sendMessageToDroid('test', 'ping');
+                const message = messageBuilder.withMessage('ping');
+                mockSlack.sendMessageTo('test', message);
     
                 expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
             });
+
             it('should match messages with multiple parameters to a correct method from the droids implementation', (done) => {
-                mockSlack.givenPostMessageFromDroidIsConfigured('Sending echo message1 message2')
+                mockSlack.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Sending echo message1 message2'))
                 
-                mockSlack.sendMessageToDroid('test', 'echo message1 message2')
+                const message = messageBuilder.withMessage('echo message1 message2');
+                mockSlack.sendMessageTo('test', message)
 
                 expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with echo message');
            });
 
             it('should match messages for all aliases defined in droids configuration', (done) => {
-                mockSlack.givenPostMessageFromDroidIsConfigured('Sending echo message1 message2')
+                mockSlack.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Sending echo message1 message2'))
                 
-                mockSlack.sendMessageToDroid('test', 'another-echo message1 message2')
+                const message = messageBuilder.withMessage('another-echo message1 message2');
+                mockSlack.sendMessageTo('test', message)
 
                 expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with echo message');
+            });
+        });
+
+        describe('acl', () => {
+            describe('channels', () => {
+                it('should reply to messages in allowed channels', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Some dirty secret').withChannel(constants.SECURITY_CHANNEL)
+                    )
+                    
+                    const message = messageBuilder.withMessage('secret').withChannel(constants.SECURITY_CHANNEL);
+                    mockSlack.sendMessageTo('test', message)
+    
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with secret message');
+                });
+    
+                it('should not reply to messages in non allowed channels', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Some dirty secret').withChannel(constants.RANDOM_CHANNEL)
+                    )
+                    
+                    const message = messageBuilder.withMessage('secret').withChannel(constants.RANDOM_CHANNEL);
+                    mockSlack.sendMessageTo('test', message)
+    
+                    expectNoWebCallsWerePerformed(mockSlack, done, 1000, 'test droid was not supposed to respond with secret message');
+                });
+            });
+
+            describe('dm', () => {
+                it('should allow direct message if no acls are specified', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Pong!').withChannel(constants.TESTDROID_PERSONAL_CHANNEL)
+                    );
+        
+                    const message = messageBuilder.withMessage('ping').withChannel(constants.TESTDROID_PERSONAL_CHANNEL);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
+                });
+    
+                it('should allow direct message if dm acl is set to true', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Pong!').withChannel(constants.TESTDROID_PERSONAL_CHANNEL)
+                    );
+        
+                    const message = messageBuilder.withMessage('direct ping').withChannel(constants.TESTDROID_PERSONAL_CHANNEL);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
+                });
+    
+                it('should not allow direct message if dm acl is set to false', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Pong!').withChannel(constants.TESTDROID_PERSONAL_CHANNEL)
+                    );
+        
+                    const message = messageBuilder.withMessage('direct ping not allowed').withChannel(constants.TESTDROID_PERSONAL_CHANNEL);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectNoWebCallsWerePerformed(mockSlack, done, 1000, 'test droid was not supposed to respond to direct message');
+                });
             });
         });
     })
