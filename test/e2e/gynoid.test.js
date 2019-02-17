@@ -220,6 +220,71 @@ describe('gynoid', () => {
                     expectNoWebCallsWerePerformed(mockSlack, done, 1000, 'test droid was not supposed to respond to direct message');
                 });
             });
+
+            describe('explicit mention', () => {
+                it('should allow explicit mention if no acls are specified', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Pong!')
+                    );
+        
+                    const message = messageBuilder.withMessage('ping').withMention(true);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
+                });
+                it('should allow explicit mention if explicit mention acl is set to true', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Pong!')
+                    );
+        
+                    const message = messageBuilder.withMessage('explicit ping').withMention(true);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
+                });
+                it('should not allow explicit mention if explicit mention acl is set to false', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('No explicit pong!')
+                    );
+        
+                    const message = messageBuilder.withMessage('no explicit ping').withMention(true);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectNoWebCallsWerePerformed(mockSlack, done, 1000, 'test droid was not supposed to respond to explicit mention');
+                });
+                it('should respond, if droid is not mentioned and explicit mention is set to false', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('No explicit pong!')
+                    );
+        
+                    const message = messageBuilder.withMessage('no explicit ping').withMention(false);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
+                });
+                it('should respond in direct messages, if droid is not mentioned and explicit mention is set to false', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('No explicit pong!').withChannel(constants.TESTDROID_PERSONAL_CHANNEL)
+                    );
+        
+                    const message = messageBuilder.withMessage('no explicit ping')
+                        .withChannel(constants.TESTDROID_PERSONAL_CHANNEL).withMention(false);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
+                });
+                it('should not allow explicit mention in direct messages, if explicit mention acl is set to false', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('No explicit pong!').withChannel(constants.TESTDROID_PERSONAL_CHANNEL)
+                    );
+        
+                    const message = messageBuilder.withMessage('no explicit ping')
+                        .withChannel(constants.TESTDROID_PERSONAL_CHANNEL).withMention(true);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectNoWebCallsWerePerformed(mockSlack, done, 1000, 'test droid was not supposed to respond to explicit mention');
+                });
+            });
         });
     })
 });
