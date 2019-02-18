@@ -39,7 +39,7 @@ class MockSlack {
             .reply(200, { ok: true})
     }
 
-    registerDroid(droidName) {
+    setupDroidRegistration(droidName) {
         const port = this.wsPort + 1
 
         const rtmFixture = defaultRTMFixtureBuilder
@@ -53,36 +53,6 @@ class MockSlack {
             .reply(200, rtmFixture);
         this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Registering Droid...'));
         this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText(`Droid ${droidName} successfully registered`));
-
-        this.sendMessageToGynoid(messageBuilder.withMessage(`register ${droidName} using xoxb-mock-token`));
-
-        return waitForCondition(() => this.allWebCallsWerePerformed(), 180000, 'registering droid')
-    }
-
-    extendDroid(droidName, extensionName) {
-        this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Extending Droid...'));
-        this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText(`Droid ${droidName} successfully extended`));
-        this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText(`Droid ${droidName} successfully reloaded`));
-
-        this.sendMessageToGynoid(messageBuilder.withMessage(`extend ${droidName} from ${extensionName}`));
-
-        return waitForCondition(() => this.allWebCallsWerePerformed(), 180000, 'installing droid')
-    }
-
-    addKey(droid, key, value) {
-        this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Key added'));
-
-        this.sendMessageToGynoid(messageBuilder.withMessage(`add key ${key} ${value} to ${droid}`));
-        
-        return waitForCondition(() => this.allWebCallsWerePerformed(), 2000, 'key was added')
-    }
-
-    removeKey(droid, key) {
-        this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Key was removed'));
-
-        this.sendMessageToGynoid(messageBuilder.withMessage(`remove key ${key} from ${droid}`));
-        
-        return waitForCondition(() => this.allWebCallsWerePerformed(), 20000, 'key was added')
     }
 
     allWebCallsWerePerformed() {

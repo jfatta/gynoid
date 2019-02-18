@@ -1,14 +1,13 @@
-const MockSlack = require('./support/mocks/mock-slack');
 const fs = require('fs');
 const rimraf = require('rimraf');
 const path = require('path');
-const createNewGynoidConfig = require('./support/create-new-config-file');
 const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
 const waitForCondition = require('./support/wait-for-condition');
 const messageBuilder = require('./support/builders/message-builder');
 const postMessageResponseBuilder = require('./support/builders/post-message-response-builder');
 const constants = require('./support/mocks/mock-slack-constants');
+const startLocalGynoid = require('./support/start-local-gynoid');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
@@ -81,25 +80,23 @@ const expectNoWebCallsWerePerformed = (mockSlack, done, timeout, message) => {
 }
 describe('gynoid', () => {
     let mockSlack;
+    let gynoidInstance;
     before((done) => {
-        mockSlack = new MockSlack({wsPort: 5521});
-        createNewGynoidConfig(TEST_GYNOID_CONFIG_PATH)
-            .then(() => {
-                const startGynoid = require('../../index');
-                return startGynoid();
+        startLocalGynoid({gynoidConfigPath: TEST_GYNOID_CONFIG_PATH, droidsFolderPath: TEST_DROIDS_FOLDER_PATH})
+            .then((result) => {
+                mockSlack = result.mockSlack;
+                gynoidInstance = result.gynoidInstance;
+                done();
             })
-            .then(() => mockSlack.registerDroid('test'))
-            .then(() => mockSlack.extendDroid('test', 'auth0/test-droid'))
-            .then(() => {
-                done()
-            });
+            .catch(err => done(err));
     })
 
     after((done) => {
         removeConfigFile(TEST_GYNOID_CONFIG_PATH)
             .then(() => removeDroids(TEST_DROIDS_FOLDER_PATH))
             .then(() => mockSlack.closeConnection())
-            .then(() => done());
+            .then(() => done())
+            .catch(err => done(err));
     })
 
     afterEach(() => {
@@ -338,7 +335,7 @@ describe('gynoid', () => {
     });
     describe('keys', () => {
         it('should add a key/value pair to droids configuration', (done) => {
-            mockSlack.addKey('test', 'myKey', 'myValue')
+            gynoidInstance.addKey('test', 'myKey', 'myValue')
                 .then(() => {
                     return readConfig(TEST_GYNOID_CONFIG_PATH)
                         .then((config) => {
@@ -346,18 +343,18 @@ describe('gynoid', () => {
                             done();
                         });
                 })
-                .then(() => mockSlack.removeKey('test', 'myKey'))
+                .then(() => gynoidInstance.removeKey('test', 'myKey'))
                 .catch((err) => done(err));
         });
         it('should remove a key/value pair from droids configuration', (done) => {                
-            mockSlack.addKey('test', 'keyToDelete', 'myValue')
+            gynoidInstance.addKey('test', 'keyToDelete', 'myValue')
                 .then(() => {
                     return readConfig(TEST_GYNOID_CONFIG_PATH)
                         .then((config) => {
                             expect(config.keys.test).to.deep.equal({keyToDelete: 'myValue'});
                         });
                 })
-                .then(() => mockSlack.removeKey('test', 'keyToDelete'))
+                .then(() => gynoidInstance.removeKey('test', 'keyToDelete'))
                 .then(() => {
                     return readConfig(TEST_GYNOID_CONFIG_PATH)
                     .then((config) => {
@@ -369,7 +366,7 @@ describe('gynoid', () => {
         });
 
         it('should list all keys', (done) => {
-            mockSlack.addKey('test', 'someKey', 'someValue')
+            gynoidInstance.addKey('test', 'someKey', 'someValue')
                 .then(() => {
                     mockSlack.givenPostMessageFromDroidIsExpected(
                         postMessageResponseBuilder.withText(`Configured keys:\nGITHUB_TOKEN\nGYNOID_TOKEN\nsomeKey`)
@@ -380,7 +377,7 @@ describe('gynoid', () => {
         
                     return expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with all keys');                            
                 })
-                .then(() => mockSlack.removeKey('test', 'someKey'))
+                .then(() => gynoidInstance.removeKey('test', 'someKey'))
                 .catch((err) => done(err));
         })
     });
