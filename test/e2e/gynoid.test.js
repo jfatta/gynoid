@@ -58,12 +58,19 @@ const expectPathToExist = (pathToCheck, done) => {
 }
 
 const expectAllWebCallsWerePerformed = (mockSlack, done, timeout, message) => {
-    waitForCondition(() => mockSlack.allWebCallsWerePerformed(), timeout, message)
-        .then(done)
+    waitForAllWebCallsToBeFinished(mockSlack, timeout, message)
+        .then(() => done())
+        .catch(err => done(err));
+}
+
+const waitForAllWebCallsToBeFinished = (mockSlack, timeout, message) => {
+    return waitForCondition(() => mockSlack.allWebCallsWerePerformed(), timeout, message)
+        .then(() => Promise.resolve())
         .catch(err => {
             const errorMessage = `${err.message}. Pending calls: ${mockSlack.getPendingCalls()}`;
-            done(new Error(errorMessage));
+            throw new Error(errorMessage);
         });
+
 }
 const expectNoWebCallsWerePerformed = (mockSlack, done, timeout, message) => {
     waitForCondition(() => mockSlack.allWebCallsWerePerformed(), timeout, message)
@@ -227,7 +234,7 @@ describe('gynoid', () => {
                         postMessageResponseBuilder.withText('Pong!')
                     );
         
-                    const message = messageBuilder.withMessage('ping').withMention(true);
+                    const message = messageBuilder.withMessage('ping').withBotMention(true);
                     mockSlack.sendMessageTo('test', message);
         
                     expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
@@ -237,7 +244,7 @@ describe('gynoid', () => {
                         postMessageResponseBuilder.withText('Pong!')
                     );
         
-                    const message = messageBuilder.withMessage('explicit ping').withMention(true);
+                    const message = messageBuilder.withMessage('explicit ping').withBotMention(true);
                     mockSlack.sendMessageTo('test', message);
         
                     expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
@@ -247,7 +254,7 @@ describe('gynoid', () => {
                         postMessageResponseBuilder.withText('No explicit pong!')
                     );
         
-                    const message = messageBuilder.withMessage('no explicit ping').withMention(true);
+                    const message = messageBuilder.withMessage('no explicit ping').withBotMention(true);
                     mockSlack.sendMessageTo('test', message);
         
                     expectNoWebCallsWerePerformed(mockSlack, done, 1000, 'test droid was not supposed to respond to explicit mention');
@@ -257,7 +264,7 @@ describe('gynoid', () => {
                         postMessageResponseBuilder.withText('No explicit pong!')
                     );
         
-                    const message = messageBuilder.withMessage('no explicit ping').withMention(false);
+                    const message = messageBuilder.withMessage('no explicit ping').withBotMention(false);
                     mockSlack.sendMessageTo('test', message);
         
                     expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
@@ -268,7 +275,7 @@ describe('gynoid', () => {
                     );
         
                     const message = messageBuilder.withMessage('no explicit ping')
-                        .withChannel(constants.TESTDROID_PERSONAL_CHANNEL).withMention(false);
+                        .withChannel(constants.TESTDROID_PERSONAL_CHANNEL).withBotMention(false);
                     mockSlack.sendMessageTo('test', message);
         
                     expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
@@ -279,12 +286,102 @@ describe('gynoid', () => {
                     );
         
                     const message = messageBuilder.withMessage('no explicit ping')
-                        .withChannel(constants.TESTDROID_PERSONAL_CHANNEL).withMention(true);
+                        .withChannel(constants.TESTDROID_PERSONAL_CHANNEL).withBotMention(true);
                     mockSlack.sendMessageTo('test', message);
         
                     expectNoWebCallsWerePerformed(mockSlack, done, 1000, 'test droid was not supposed to respond to explicit mention');
                 });
             });
+            describe('mention', () => {
+                it('should allow bot mention if no acls are specified', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Pong!')
+                    );
+        
+                    const message = messageBuilder.withMessage('test ping').withBotMention(false);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');
+                });
+                it('should allow mentioning, if mention acl is set to true', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Personal pong!')
+                    );
+        
+                    const message = messageBuilder.withMessage('test personal ping').withBotMention(false);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');                        
+                });
+                it('should not allow mentioning, if mention acl is set to false', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('No personal pong!')
+                    );
+        
+                    const message = messageBuilder.withMessage('test: no personal ping').withBotMention(false);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectNoWebCallsWerePerformed(mockSlack, done, 1000, 'test droid was not supposed to respond to message with mention');
+                });
+                it('should allow messages with no mention, if mention acl is set to false', (done) => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('No personal pong!')
+                    );
+        
+                    const message = messageBuilder.withMessage('no personal ping').withBotMention(false);
+                    mockSlack.sendMessageTo('test', message);
+        
+                    expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with pong message');                        
+                });
+            });
         });
-    })
+    });
+    describe('keys', () => {
+        it('should add a key/value pair to droids configuration', (done) => {
+            mockSlack.addKey('test', 'myKey', 'myValue')
+                .then(() => {
+                    return readConfig(TEST_GYNOID_CONFIG_PATH)
+                        .then((config) => {
+                            expect(config.keys.test).to.deep.equal({myKey: 'myValue'});
+                            done();
+                        });
+                })
+                .then(() => mockSlack.removeKey('test', 'myKey'))
+                .catch((err) => done(err));
+        });
+        it('should remove a key/value pair from droids configuration', (done) => {                
+            mockSlack.addKey('test', 'keyToDelete', 'myValue')
+                .then(() => {
+                    return readConfig(TEST_GYNOID_CONFIG_PATH)
+                        .then((config) => {
+                            expect(config.keys.test).to.deep.equal({keyToDelete: 'myValue'});
+                        });
+                })
+                .then(() => mockSlack.removeKey('test', 'keyToDelete'))
+                .then(() => {
+                    return readConfig(TEST_GYNOID_CONFIG_PATH)
+                    .then((config) => {
+                        expect((config.keys.test || {}).keyToDelete).to.be.undefined;
+                        done();
+                    });                            
+                })
+                .catch((err) => done(err));
+        });
+
+        it('should list all keys', (done) => {
+            mockSlack.addKey('test', 'someKey', 'someValue')
+                .then(() => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText(`Configured keys:\nGITHUB_TOKEN\nGYNOID_TOKEN\nsomeKey`)
+                    );
+        
+                    const message = messageBuilder.withMessage('list all keys');
+                    mockSlack.sendMessageToGynoid(message);
+        
+                    return expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with all keys');                            
+                })
+                .then(() => mockSlack.removeKey('test', 'someKey'))
+                .catch((err) => done(err));
+        })
+    });
 });

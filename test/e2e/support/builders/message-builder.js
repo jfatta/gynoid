@@ -21,7 +21,7 @@ class MessageBuilder {
         return new MessageBuilder(newTemplate, this.botId, this.mention);
     }
 
-    withMention(mention) {
+    withBotMention(mention) {
         return new MessageBuilder(Object.assign({}, this.template), this.botId, mention);
     }
 

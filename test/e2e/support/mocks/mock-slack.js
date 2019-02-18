@@ -28,8 +28,8 @@ class MockSlack {
         this.sockets[droidName].sendMessage(JSON.stringify(message));
     }
 
-    sendMessageToGynoid(text) {
-        this.sendMessageTo('gynoidbot', messageBuilder.withMessage(text));
+    sendMessageToGynoid(messageBuilder) {
+        this.sendMessageTo('gynoidbot', messageBuilder);
     }
 
     givenPostMessageFromDroidIsExpected(messageBuilder) {
@@ -54,7 +54,7 @@ class MockSlack {
         this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Registering Droid...'));
         this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText(`Droid ${droidName} successfully registered`));
 
-        this.sendMessageToGynoid(`register ${droidName} using xoxb-mock-token`);
+        this.sendMessageToGynoid(messageBuilder.withMessage(`register ${droidName} using xoxb-mock-token`));
 
         return waitForCondition(() => this.allWebCallsWerePerformed(), 180000, 'registering droid')
     }
@@ -64,9 +64,25 @@ class MockSlack {
         this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText(`Droid ${droidName} successfully extended`));
         this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText(`Droid ${droidName} successfully reloaded`));
 
-        this.sendMessageToGynoid(`extend ${droidName} from ${extensionName}`);
+        this.sendMessageToGynoid(messageBuilder.withMessage(`extend ${droidName} from ${extensionName}`));
 
         return waitForCondition(() => this.allWebCallsWerePerformed(), 180000, 'installing droid')
+    }
+
+    addKey(droid, key, value) {
+        this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Key added'));
+
+        this.sendMessageToGynoid(messageBuilder.withMessage(`add key ${key} ${value} to ${droid}`));
+        
+        return waitForCondition(() => this.allWebCallsWerePerformed(), 2000, 'key was added')
+    }
+
+    removeKey(droid, key) {
+        this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Key was removed'));
+
+        this.sendMessageToGynoid(messageBuilder.withMessage(`remove key ${key} from ${droid}`));
+        
+        return waitForCondition(() => this.allWebCallsWerePerformed(), 20000, 'key was added')
     }
 
     allWebCallsWerePerformed() {
