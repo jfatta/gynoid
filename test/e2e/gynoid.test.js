@@ -332,6 +332,114 @@ describe('gynoid', () => {
                 });
             });
         });
+
+        describe('registration', () => {
+            it('should derigester an existing droid', (done) => {
+                gynoidInstance.registerDroid('newDroid')
+                    .then(() => {
+                        mockSlack.givenPostMessageFromDroidIsExpected(
+                            postMessageResponseBuilder.withText('Droid newDroid successfully unregistered')
+                        );
+
+                        const message = messageBuilder.withMessage('unregister newDroid');
+                        mockSlack.sendMessageToGynoid(message);
+
+                        waitForAllWebCallsToBeFinished(mockSlack, 2000, 'gynoid unregistered a droid')
+                            .then(() => {
+                                return readConfig(TEST_GYNOID_CONFIG_PATH)
+                                    .then((config) => {
+                                        expect(config.droids.newDroid).to.be.undefined;
+                                    });
+                            })
+                    })
+                    .then(() => done())
+                    .catch((err) => done(err));
+            });
+
+            it('should reply with an error, when deregistering non-existent droid', (done) => {
+                mockSlack.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Unregistering Droid...'));
+                mockSlack.givenPostMessageFromDroidIsExpected(
+                    postMessageResponseBuilder.withText(
+                        'Unable to unregister Droid.\n```[object Object]```'
+                    )
+                );
+
+                const message = messageBuilder.withMessage('unregister non-existent');
+                mockSlack.sendMessageToGynoid(message);
+
+                expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'replied with an error');
+            });
+        });
+
+        describe('extensions', () => {
+            it('should remove existing extension', (done) => {
+                gynoidInstance.registerDroid('extensionDroid')
+                    .then(() => gynoidInstance.extendDroid('extensionDroid', 'auth0/test-droid'))
+                    .then(() => {
+                        mockSlack.givenPostMessageFromDroidIsExpected(
+                            postMessageResponseBuilder.withText('Removing extension...')
+                        );
+                        mockSlack.givenPostMessageFromDroidIsExpected(
+                            postMessageResponseBuilder.withText('Extension test-droid successfully removed')
+                        );
+
+                        const message = messageBuilder.withMessage('remove extension test-droid from extensionDroid');
+                        mockSlack.sendMessageToGynoid(message);
+                        
+                        return waitForAllWebCallsToBeFinished(mockSlack, 2000, 'extension removed')
+                            .then(() => {
+                                return readConfig(TEST_GYNOID_CONFIG_PATH)
+                                    .then((config) => {
+                                        expect(config.droids.extensionDroid.extensions).to.deep.equal([]);
+                                    });
+                            });
+                    })
+                    .then(() => done())
+                    .catch(err => done(err));
+            });
+
+            it('should reply with an error, if removing non-existing extension', (done) => {
+                mockSlack.givenPostMessageFromDroidIsExpected(
+                    postMessageResponseBuilder.withText('Removing extension...')
+                );
+                mockSlack.givenPostMessageFromDroidIsExpected(
+                    postMessageResponseBuilder.withText('Unable to remove extension unknown-droid.\n```[object Object]```')
+                );
+
+                const message = messageBuilder.withMessage('remove extension unknown-droid from test');
+                mockSlack.sendMessageToGynoid(message);
+                    
+                expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'replied with error');
+            });
+
+            it('should reply with an error, if removing extension for non-existing droid', (done) => {
+                mockSlack.givenPostMessageFromDroidIsExpected(
+                    postMessageResponseBuilder.withText('Removing extension...')
+                );
+                mockSlack.givenPostMessageFromDroidIsExpected(
+                    postMessageResponseBuilder.withText('Unable to remove extension test-droid.\n```[object Object]```')
+                );
+
+                const message = messageBuilder.withMessage('remove extension test-droid from unknown');
+                mockSlack.sendMessageToGynoid(message);
+                    
+                expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'replied with error');
+            });
+
+            it('should list existing extensions', (done) => {
+                mockSlack.givenPostMessageFromDroidIsExpected(
+                    postMessageResponseBuilder.withText('Listing extensions...')
+                );
+                mockSlack.givenPostMessageFromDroidIsExpected(
+                    postMessageResponseBuilder.withText('Installed extensions for test: `test-droid`')
+                );
+
+                const message = messageBuilder.withMessage('list extensions for test');
+                mockSlack.sendMessageToGynoid(message);
+                    
+                expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'replied with extensions');
+            })
+        });
     });
     describe('keys', () => {
         it('should add a key/value pair to droids configuration', (done) => {
@@ -375,9 +483,25 @@ describe('gynoid', () => {
                     const message = messageBuilder.withMessage('list all keys');
                     mockSlack.sendMessageToGynoid(message);
         
-                    return expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'test droid responded with all keys');                            
+                    return expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'gynoid responded with all keys');                            
                 })
                 .then(() => gynoidInstance.removeKey('test', 'someKey'))
+                .catch((err) => done(err));
+        });
+
+        it('should list keys for a droid', (done) => {
+            gynoidInstance.addKey('test', 'anotherKey', 'value')
+                .then(() => {
+                    mockSlack.givenPostMessageFromDroidIsExpected(
+                        postMessageResponseBuilder.withText('Configured keys for test:\nanotherKey')
+                    )
+
+                    const message = messageBuilder.withMessage('list keys for test');
+                    mockSlack.sendMessageToGynoid(message);
+
+                    return expectAllWebCallsWerePerformed(mockSlack, done, 2000, 'gynoid responded with keys for test droid');
+                })
+                .then(() => gynoidInstance.removeKey('test', 'anotherKey'))
                 .catch((err) => done(err));
         })
     });

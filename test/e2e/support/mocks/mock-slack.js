@@ -40,14 +40,14 @@ class MockSlack {
     }
 
     setupDroidRegistration(droidName) {
-        const port = this.wsPort + 1
+        this.wsPort = this.wsPort + 1;
 
         const rtmFixture = defaultRTMFixtureBuilder
             .withId(`ID${droidName}`)
             .withName(droidName)
-            .withUrl('ws://localhost:' + port)
+            .withUrl('ws://localhost:' + this.wsPort)
             .build();
-        this.sockets[droidName] = new MockWSServer({port})
+        this.sockets[droidName] = new MockWSServer({port: this.wsPort})
         this.webApi.post('/rtm.start')
             .times(1)
             .reply(200, rtmFixture);
