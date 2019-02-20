@@ -3,7 +3,7 @@ const MockWSServer = require('./mock-ws-server');
 const _ = require('lodash');
 const waitForCondition = require('../wait-for-condition');
 const messageBuilder = require('../builders/message-builder');
-const postMessageResponseBuilder = require('../builders/post-message-response-builder');
+const postMessageRequestBodyBuilder = require('../builders/post-message-request-body-builder');
 const defaultRTMFixtureBuilder = require('../builders/rtm-builder');
 
 class MockSlack {
@@ -32,9 +32,9 @@ class MockSlack {
         this.sendMessageTo('gynoidbot', messageBuilder);
     }
 
-    givenPostMessageFromDroidIsExpected(messageBuilder) {
+    givenPostMessageFromDroidIsExpected(requestBodyBuilder) {
         this.webApi
-            .post('/chat.postMessage', messageBuilder.build())
+            .post('/chat.postMessage', requestBodyBuilder.build())
             .times(1)
             .reply(200, { ok: true})
     }
@@ -51,8 +51,8 @@ class MockSlack {
         this.webApi.post('/rtm.start')
             .times(1)
             .reply(200, rtmFixture);
-        this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Registering Droid...'));
-        this.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText(`Droid ${droidName} successfully registered`));
+        this.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText('Registering Droid...'));
+        this.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText(`Droid ${droidName} successfully registered`));
     }
 
     allWebCallsWerePerformed() {

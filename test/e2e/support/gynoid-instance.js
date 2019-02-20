@@ -1,6 +1,6 @@
 const waitForCondition = require('./wait-for-condition');
 const messageBuilder = require('./builders/message-builder');
-const postMessageResponseBuilder = require('./builders/post-message-response-builder');
+const postMessageRequestBodyBuilder = require('./builders/post-message-request-body-builder');
 const defaultRTMFixtureBuilder = require('./builders/rtm-builder');
 
 class GynoidInstance {
@@ -15,9 +15,9 @@ class GynoidInstance {
     }
 
     extendDroid(droidName, extensionName) {
-        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Extending Droid...'));
-        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText(`Droid ${droidName} successfully extended`));
-        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText(`Droid ${droidName} successfully reloaded`));
+        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText('Extending Droid...'));
+        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText(`Droid ${droidName} successfully extended`));
+        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText(`Droid ${droidName} successfully reloaded`));
 
         this.mockSlack.sendMessageToGynoid(messageBuilder.withMessage(`extend ${droidName} from ${extensionName}`));
 
@@ -25,13 +25,13 @@ class GynoidInstance {
     }
 
     addKey(droid, key, value) {
-        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Key added'));
+        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText('Key added'));
         this.mockSlack.sendMessageToGynoid(messageBuilder.withMessage(`add key ${key} ${value} to ${droid}`));
         return waitForCondition(() => this.mockSlack.allWebCallsWerePerformed(), 2000, 'key was added')
     }
 
     removeKey(droid, key) {
-        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageResponseBuilder.withText('Key was removed'));
+        this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText('Key was removed'));
         this.mockSlack.sendMessageToGynoid(messageBuilder.withMessage(`remove key ${key} from ${droid}`));
         return waitForCondition(() => this.mockSlack.allWebCallsWerePerformed(), 20000, 'key was added')
     }

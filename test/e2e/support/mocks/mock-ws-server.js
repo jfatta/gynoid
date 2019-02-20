@@ -14,7 +14,9 @@ class MockWSServer extends ws.Server {
   }
 
   closeConnection() {
-    this.clientConnection.close();
+    if (this.clientConnection) {
+      this.clientConnection.close();
+    }
   }
 }
 

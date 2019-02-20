@@ -1,18 +1,18 @@
 const constants = require('../mocks/mock-slack-constants');
 
-class PostMessageResponseBuilder {
+class PostMessageRequestBodyBuilder {
     constructor(template) {
         this.template = template;
     }
 
     withText(text) {
         const newTemplate = Object.assign({}, this.template, {text});
-        return new PostMessageResponseBuilder(newTemplate);
+        return new PostMessageRequestBodyBuilder(newTemplate);
     }
 
     withChannel(channel) {
         const newTemplate = Object.assign({}, this.template, {channel});
-        return new PostMessageResponseBuilder(newTemplate);
+        return new PostMessageRequestBodyBuilder(newTemplate);
     }
 
     build() {
@@ -27,4 +27,4 @@ const defaultTemplate = {
     token: /.*/
 }
 
-module.exports = new PostMessageResponseBuilder(defaultTemplate);
+module.exports = new PostMessageRequestBodyBuilder(defaultTemplate);
