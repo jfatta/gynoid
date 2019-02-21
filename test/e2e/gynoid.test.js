@@ -5,6 +5,7 @@ const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
 const waitForCondition = require('./support/wait-for-condition');
 const messageBuilder = require('./support/builders/message-builder');
+const createChannelMessageBuilder = require('./support/builders/create-channel-message-builder');
 const postMessageRequestBodyBuilder = require('./support/builders/post-message-request-body-builder');
 const imOpenRequestBodyBuilder = require('./support/builders/im-open-request-body-builder');
 const imOpenResponseBuilder = require('./support/builders/im-open-response-builder');
@@ -522,6 +523,22 @@ describe('gynoid', () => {
                 })
                 .then(() => gynoidInstance.removeKey('test', 'anotherKey'))
                 .catch((err) => done(err));
-        })
+        });
     });
+
+    describe('slack updates', () => {
+        it('should be able to send message to newly created channel', (done) => {
+            const newChannelId = 'CHANNELID';
+            gynoidInstance.createChannel(newChannelId);
+
+            mockSlack.givenPostMessageFromDroidIsExpected(
+                postMessageRequestBodyBuilder.withText('Pong!').withChannel(newChannelId)
+            );
+            
+            const message = messageBuilder.withMessage('ping').withChannel(newChannelId);
+            mockSlack.sendMessageTo('test', message);
+
+            expectAllWebCallsWerePerformed(mockSlack, done, TIMEOUT, 'test droid responded with secret message');
+        });
+    })
 });

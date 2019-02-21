@@ -2,6 +2,7 @@ const waitForCondition = require('./wait-for-condition');
 const messageBuilder = require('./builders/message-builder');
 const postMessageRequestBodyBuilder = require('./builders/post-message-request-body-builder');
 const defaultRTMFixtureBuilder = require('./builders/rtm-builder');
+const createChannelMessageBuilder = require('./builders/create-channel-message-builder');
 
 class GynoidInstance {
     constructor(mockSlack) {
@@ -34,6 +35,11 @@ class GynoidInstance {
         this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText('Key was removed'));
         this.mockSlack.sendMessageToGynoid(messageBuilder.withMessage(`remove key ${key} from ${droid}`));
         return waitForCondition(() => this.mockSlack.allWebCallsWerePerformed(), 20000, 'key was added')
+    }
+
+    createChannel(channelId) {
+        const message = createChannelMessageBuilder.withId(channelId).build();
+        this.mockSlack.sendMessageToAllSockets(message);
     }
 }
 

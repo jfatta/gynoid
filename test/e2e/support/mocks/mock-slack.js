@@ -32,6 +32,12 @@ class MockSlack {
         this.sendMessageTo('gynoidbot', messageBuilder);
     }
 
+    sendMessageToAllSockets(message) {
+        Object.keys(this.sockets).forEach((socket) => {
+            this.sockets[socket].sendMessage(JSON.stringify(message));
+        });
+    }
+
     givenPostMessageFromDroidIsExpected(requestBodyBuilder) {
         this.webApi
             .post('/chat.postMessage', requestBodyBuilder.build())
