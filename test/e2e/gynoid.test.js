@@ -6,6 +6,8 @@ const chaiAsPromised = require("chai-as-promised");
 const waitForCondition = require('./support/wait-for-condition');
 const messageBuilder = require('./support/builders/message-builder');
 const postMessageRequestBodyBuilder = require('./support/builders/post-message-request-body-builder');
+const imOpenRequestBodyBuilder = require('./support/builders/im-open-request-body-builder');
+const imOpenResponseBuilder = require('./support/builders/im-open-response-builder');
 const constants = require('./support/mocks/mock-slack-constants');
 const startLocalGynoid = require('./support/start-local-gynoid');
 
@@ -137,7 +139,7 @@ describe('gynoid', () => {
     });
 
     describe('droids', () => {
-        describe('message parsing', () => {
+        describe('messages', () => {
             it('should match plain message to a correct method from the droids implementation', (done) => {
                 mockSlack.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText('Pong!'));
     
@@ -161,6 +163,21 @@ describe('gynoid', () => {
                 
                 const message = messageBuilder.withMessage('another-echo message1 message2');
                 mockSlack.sendMessageTo('test', message)
+
+                expectAllWebCallsWerePerformed(mockSlack, done, TIMEOUT, 'test droid responded with echo message');
+            });
+
+            it('should be able to send direct messages to users', (done) => {
+                mockSlack.givenIMOpenCallFromDroidIsExpected(
+                    imOpenRequestBodyBuilder.withUser(constants.JON_DOE_ID),
+                    imOpenResponseBuilder.withChannel(constants.JON_DOE_CHANNEL)
+                );
+                mockSlack.givenPostMessageFromDroidIsExpected(
+                    postMessageRequestBodyBuilder.withText('hello from test').withChannel(constants.JON_DOE_CHANNEL)
+                );
+
+                const message = messageBuilder.withMessage('direct message to @jon.doe');
+                mockSlack.sendMessageTo('test', message);
 
                 expectAllWebCallsWerePerformed(mockSlack, done, TIMEOUT, 'test droid responded with echo message');
             });

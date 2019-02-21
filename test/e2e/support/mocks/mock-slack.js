@@ -39,6 +39,13 @@ class MockSlack {
             .reply(200, { ok: true})
     }
 
+    givenIMOpenCallFromDroidIsExpected(requestBodyBuilder, responseBodyBuilder) {
+        this.webApi
+            .post('/im.open', requestBodyBuilder.build())
+            .times(1)
+            .reply(200, responseBodyBuilder.build());
+    }
+
     setupDroidRegistration(droidName) {
         this.wsPort = this.wsPort + 1;
 
