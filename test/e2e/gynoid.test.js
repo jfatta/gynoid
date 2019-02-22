@@ -182,6 +182,15 @@ describe('gynoid', () => {
 
                 expectAllWebCallsWerePerformed(mockSlack, done, TIMEOUT, 'test droid responded with echo message');
             });
+
+            it('should be able to upload files', (done) => {
+                mockSlack.givenFilesUploadIsExpected({filename: 'file.txt', content: 'filecontent'});
+
+                const message = messageBuilder.withMessage('upload file.txt filecontent');
+                mockSlack.sendMessageTo('test', message);
+
+                expectAllWebCallsWerePerformed(mockSlack, done, TIMEOUT, 'test droid uploaded file');
+            });
         });
 
         describe('acl', () => {
@@ -372,6 +381,7 @@ describe('gynoid', () => {
                                     });
                             })
                     })
+                    .then(() => mockSlack.removeWS('newDroid'))
                     .then(() => done())
                     .catch((err) => done(err));
             });

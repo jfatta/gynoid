@@ -38,6 +38,16 @@ class MockSlack {
         });
     }
 
+    givenFilesUploadIsExpected(formData) {
+        this.webApi
+          .post('/files.upload', function(body) {
+              return Object.keys(formData).every((formParameter) => {
+                return body.includes(`name="${formParameter}"`) && body.includes(formData[formParameter]);
+              });
+          })
+          .times(1)
+          .reply(200, {ok: true});
+    }
     givenPostMessageFromDroidIsExpected(requestBodyBuilder) {
         this.webApi
             .post('/chat.postMessage', requestBodyBuilder.build())
@@ -80,6 +90,12 @@ class MockSlack {
         Object.keys(this.sockets).forEach((botWS) => {
             this.sockets[botWS].closeConnection();
         })
+    }
+
+    removeWS(socketName) {
+        if (this.sockets.hasOwnProperty(socketName)) {
+            delete this.sockets[socketName];
+        }
     }
 
     clearAllWebApiCalls() {
