@@ -15,6 +15,12 @@ class PostMessageRequestBodyBuilder {
         return new PostMessageRequestBodyBuilder(newTemplate);
     }
 
+
+    withAttachments(attachments) {
+        const newTemplate = Object.assign({}, this.template, {attachments: JSON.stringify(attachments)});
+        return new PostMessageRequestBodyBuilder(newTemplate);
+    }
+
     build() {
         return Object.assign({}, this.template);
     }

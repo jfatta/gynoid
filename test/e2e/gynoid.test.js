@@ -191,6 +191,37 @@ describe('gynoid', () => {
 
                 expectAllWebCallsWerePerformed(mockSlack, done, TIMEOUT, 'test droid uploaded file');
             });
+
+            it('should be able to send attachments', (done) => {
+                mockSlack.givenPostMessageFromDroidIsExpected(
+                    postMessageRequestBodyBuilder
+                    .withText('my attachment')
+                    .withAttachments([
+                        {
+                            fallback: 'ReferenceError - UI is notdefine: https://honeybadger.io/path/to/event/',
+                            text: '<https://honeybadger.io/path/to/event/|ReferenceError> - UI is not defined',
+                            fields: [
+                                {
+                                    title: 'Project',
+                                    value: 'Awesome Project',
+                                    short: true
+                                },
+                                {
+                                    title: 'Environment',
+                                    value: 'production',
+                                    short: true
+                                }
+                            ],
+                            color: '#F35A00'
+                        }
+                    ])
+                );
+
+                const message = messageBuilder.withMessage('send attachment');
+                mockSlack.sendMessageTo('test', message);
+
+                expectAllWebCallsWerePerformed(mockSlack, done, TIMEOUT, 'test droid sent attachment');
+            });
         });
 
         describe('acl', () => {
@@ -548,7 +579,7 @@ describe('gynoid', () => {
             const message = messageBuilder.withMessage('ping').withChannel(newChannelId);
             mockSlack.sendMessageTo('test', message);
 
-            expectAllWebCallsWerePerformed(mockSlack, done, TIMEOUT, 'test droid responded with secret message');
+            expectAllWebCallsWerePerformed(mockSlack, done, TIMEOUT, 'test droid responded in a new channel');
         });
     })
 });
