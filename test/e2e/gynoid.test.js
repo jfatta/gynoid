@@ -90,8 +90,10 @@ describe('gynoid', () => {
             .then((result) => {
                 mockSlack = result.mockSlack;
                 gynoidInstance = result.gynoidInstance;
-                done();
             })
+            .then(() => gynoidInstance.registerDroid('test'))
+            .then(() => gynoidInstance.extendDroid('test', 'auth0/test-droid'))
+            .then(() => done())
             .catch(err => done(err));
     });
 
