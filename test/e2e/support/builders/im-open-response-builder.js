@@ -1,5 +1,3 @@
-const constants = require('../mocks/mock-slack-constants');
-
 class IMOpenResponseBuilder {
     constructor(template) {
         this.template = template;

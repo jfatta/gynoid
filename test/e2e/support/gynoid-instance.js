@@ -34,7 +34,7 @@ class GynoidInstance {
     removeKey(droid, key) {
         this.mockSlack.givenPostMessageFromDroidIsExpected(postMessageRequestBodyBuilder.withText('Key was removed'));
         this.mockSlack.sendMessageToGynoid(messageBuilder.withMessage(`remove key ${key} from ${droid}`));
-        return waitForCondition(() => this.mockSlack.allWebCallsWerePerformed(), 20000, 'key was added')
+        return waitForCondition(() => this.mockSlack.allWebCallsWerePerformed(), 2000, 'key was added')
     }
 
     createChannel(channelId) {
